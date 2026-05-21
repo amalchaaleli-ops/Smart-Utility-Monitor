@@ -7,36 +7,52 @@ from sklearn.ensemble import IsolationForest
 # Configuration de la page
 st.set_page_config(page_title="Monitor AI", layout="wide", initial_sidebar_state="expanded")
 
-# --- BARRE LATÉRALE (Contexte local) ---
+# --- BARRE LATÉRALE (Contexte local Grand Tunis) ---
 with st.sidebar:
-    st.header("⚙️ Paramètres Réseau")
-    secteur = st.selectbox("Sélectionner la zone de supervision :", 
-                           ["Secteur Ariana - Nord", "Secteur Tunis - FST", "Zone Industrielle"])
-    sensibilite = st.slider("Sensibilité du modèle de détection", 0.01, 0.10, 0.05)
+    st.header("⚙️ Paramètres Réseau (Grand Tunis)")
+    
+    # Ajout des vraies régions tunisoises
+    secteur = st.selectbox("Sélectionner la zone de supervision :", [
+        "Secteur Ariana - Nord", 
+        "Secteur Tunis - Centre (FST)", 
+        "Secteur Le Bardo",
+        "Banlieue Sud - El Mourouj",
+        "Zone Industrielle - Ben Arous",
+        "Secteur La Manouba"
+    ])
+    sensibilite = st.slider("Sensibilité de l'IA (Isolation Forest)", 0.01, 0.10, 0.05)
     st.markdown("---")
-    st.markdown("*Outil d'intelligence artificielle destiné à la supervision des réseaux publics.*")
+    st.markdown("*Système de supervision des réseaux d'eau/électricité.*")
 
 # --- TITRE PRINCIPAL ---
-st.title(f"💧 Détection d'Anomalies - {secteur}")
+st.title(f"⚡ Supervision et Détection - {secteur}")
 
-# --- GÉNÉRATION DE DONNÉES RÉALISTES ET "SALES" ---
+# --- GÉNÉRATION DE DONNÉES SELON LA RÉGION ---
 np.random.seed(42)
 dates = pd.date_range(start="2023-01-01", periods=150)
 
-# Simuler une tendance avec des variations (week-ends plus bas)
-base_consumption = 50 + np.sin(np.linspace(0, 10, 150)) * 10
+# On adapte le volume de base selon la région choisie
+if "Industrielle" in secteur:
+    base_consumption = 300 + np.sin(np.linspace(0, 15, 150)) * 50  # Forte conso, variations brusques
+elif "Mourouj" in secteur or "Bardo" in secteur:
+    base_consumption = 80 + np.cos(np.linspace(0, 10, 150)) * 15   # Résidentiel
+else:
+    base_consumption = 50 + np.sin(np.linspace(0, 10, 150)) * 10   # Standard
+
 noise = np.random.normal(loc=0, scale=3, size=150)
 consumption = base_consumption + noise
 
 # 1. Injecter des valeurs aberrantes (fuites / fraudes)
-consumption[25] = 130
-consumption[80] = 15
-consumption[140] = 115
+consumption[25] = base_consumption[25] * 2.5  # Pic énorme (Fraude/Fuite)
+consumption[80] = base_consumption[80] * 0.2  # Chute anormale
+consumption[140] = base_consumption[140] * 2.1
 
-# 2. Injecter des pannes de capteurs (Valeurs manquantes / NaN)
+# 2. Injecter des pannes de capteurs 
 consumption[45:48] = np.nan 
 
 df = pd.DataFrame({'Date': dates, 'Consommation': consumption})
+df['Consommation_Clean'] = df['Consommation'].interpolate()
+
 
 # Nettoyage des données (interpolation pour combler les pannes de capteurs)
 df['Consommation_Clean'] = df['Consommation'].interpolate()
