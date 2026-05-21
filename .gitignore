@@ -1,0 +1,19 @@
+# Environnements virtuels
+env/
+venv/
+
+# Fichiers générés par Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Configurations spécifiques à VS Code
+.vscode/
+
+# Fichiers système Windows
+Thumbs.db
+Desktop.ini
+
+# Fichiers système Mac 
+.DS_Store
